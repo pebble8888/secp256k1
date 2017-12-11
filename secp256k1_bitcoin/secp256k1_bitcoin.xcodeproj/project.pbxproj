@@ -37,7 +37,6 @@
 		A2C71A461FC6DBA400A208BC /* num_gmp_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = A2C719F81FC6DBA000A208BC /* num_gmp_impl.h */; };
 		A2C71A481FC6DBA400A208BC /* ecmult_gen.h in Headers */ = {isa = PBXBuildFile; fileRef = A2C719FA1FC6DBA100A208BC /* ecmult_gen.h */; };
 		A2C71A491FC6DBA400A208BC /* ecdsa_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = A2C719FB1FC6DBA100A208BC /* ecdsa_impl.h */; };
-		A2C71A551FC6DBA400A208BC /* scalar_low_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = A2C71A0B1FC6DBA100A208BC /* scalar_low_impl.h */; };
 		A2C71A561FC6DBA400A208BC /* eckey_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = A2C71A0C1FC6DBA100A208BC /* eckey_impl.h */; };
 		A2C71A571FC6DBA400A208BC /* util.h in Headers */ = {isa = PBXBuildFile; fileRef = A2C71A0D1FC6DBA100A208BC /* util.h */; };
 		A2C71A581FC6DBA400A208BC /* group_impl.h in Headers */ = {isa = PBXBuildFile; fileRef = A2C71A0E1FC6DBA100A208BC /* group_impl.h */; };
@@ -100,7 +99,6 @@
 		A2C719F81FC6DBA000A208BC /* num_gmp_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = num_gmp_impl.h; path = ../../../src/num_gmp_impl.h; sourceTree = "<group>"; };
 		A2C719FA1FC6DBA100A208BC /* ecmult_gen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ecmult_gen.h; path = ../../../src/ecmult_gen.h; sourceTree = "<group>"; };
 		A2C719FB1FC6DBA100A208BC /* ecdsa_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ecdsa_impl.h; path = ../../../src/ecdsa_impl.h; sourceTree = "<group>"; };
-		A2C71A0B1FC6DBA100A208BC /* scalar_low_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = scalar_low_impl.h; path = ../../../src/scalar_low_impl.h; sourceTree = "<group>"; };
 		A2C71A0C1FC6DBA100A208BC /* eckey_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eckey_impl.h; path = ../../../src/eckey_impl.h; sourceTree = "<group>"; };
 		A2C71A0D1FC6DBA100A208BC /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = util.h; path = ../../../src/util.h; sourceTree = "<group>"; };
 		A2C71A0E1FC6DBA100A208BC /* group_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = group_impl.h; path = ../../../src/group_impl.h; sourceTree = "<group>"; };
@@ -221,7 +219,6 @@
 				A2C719E91FC6DB9F00A208BC /* scalar_4x64_impl.h */,
 				A2C719E41FC6DB9F00A208BC /* scalar_4x64.h */,
 				A2C71A151FC6DBA200A208BC /* scalar_impl.h */,
-				A2C71A0B1FC6DBA100A208BC /* scalar_low_impl.h */,
 				A2C719F11FC6DBA000A208BC /* scalar_low.h */,
 				A2C71A161FC6DBA200A208BC /* scalar.h */,
 				A2C71A231FC6DBA400A208BC /* secp256k1.c */,
@@ -309,7 +306,6 @@
 				A2C71A3F1FC6DBA400A208BC /* scalar_low.h in Headers */,
 				A2C71A321FC6DBA400A208BC /* scalar_4x64.h in Headers */,
 				A2C71A2C1FC6DBA400A208BC /* main_impl.h in Headers */,
-				A2C71A551FC6DBA400A208BC /* scalar_low_impl.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

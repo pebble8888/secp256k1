@@ -36,30 +36,10 @@
  *    split the hex output into 4-byte chunks.
  *   print "%x %x" % P.xy()
  */
-#if defined(EXHAUSTIVE_TEST_ORDER)
-#  if EXHAUSTIVE_TEST_ORDER == 199
-const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
-    0xFA7CC9A7, 0x0737F2DB, 0xA749DD39, 0x2B4FB069,
-    0x3B017A7D, 0xA808C2F1, 0xFB12940C, 0x9EA66C18,
-    0x78AC123A, 0x5ED8AEF3, 0x8732BC91, 0x1F3A2868,
-    0x48DF246C, 0x808DAE72, 0xCFE52572, 0x7F0501ED
-);
-
-const int CURVE_B = 4;
-#  elif EXHAUSTIVE_TEST_ORDER == 13
-const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
-    0xedc60018, 0xa51a786b, 0x2ea91f4d, 0x4c9416c0,
-    0x9de54c3b, 0xa1316554, 0x6cf4345c, 0x7277ef15,
-    0x54cb1b6b, 0xdc8c1273, 0x087844ea, 0x43f4603e,
-    0x0eaf9a43, 0xf6effe55, 0x939f806d, 0x37adf8ac
-);
-const int CURVE_B = 2;
-#  else
-#    error No known generator for the specified exhaustive test group order.
-#  endif
-#else
 /** Generator for secp256k1, value 'g' defined in
  *  "Standards for Efficient Cryptography" (SEC2) 2.7.1.
+ *
+ *  @note base point
  */
 static const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
     0x79BE667EUL, 0xF9DCBBACUL, 0x55A06295UL, 0xCE870B07UL,
@@ -69,7 +49,6 @@ static const secp256k1_ge secp256k1_ge_const_g = SECP256K1_GE_CONST(
 );
 
 const int CURVE_B = 7;
-#endif
 
 static void secp256k1_ge_set_gej_zinv(secp256k1_ge *r, const secp256k1_gej *a, const secp256k1_fe *zi) {
     secp256k1_fe zi2;
@@ -190,6 +169,7 @@ static void secp256k1_ge_globalz_set_table_gej(size_t len, secp256k1_ge *r, secp
     }
 }
 
+// ヤコビアン座標点 無限遠点セット
 static void secp256k1_gej_set_infinity(secp256k1_gej *r) {
     r->infinity = 1;
     secp256k1_fe_clear(&r->x);
@@ -210,12 +190,14 @@ static void secp256k1_gej_clear(secp256k1_gej *r) {
     secp256k1_fe_clear(&r->z);
 }
 
+// アフィン座標点 0セット
 static void secp256k1_ge_clear(secp256k1_ge *r) {
     r->infinity = 0;
     secp256k1_fe_clear(&r->x);
     secp256k1_fe_clear(&r->y);
 }
 
+//
 static int secp256k1_ge_set_xquad(secp256k1_ge *r, const secp256k1_fe *x) {
     secp256k1_fe x2, x3, c;
     r->x = *x;
@@ -227,6 +209,7 @@ static int secp256k1_ge_set_xquad(secp256k1_ge *r, const secp256k1_fe *x) {
     return secp256k1_fe_sqrt(&r->y, &c);
 }
 
+//
 static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int odd) {
     if (!secp256k1_ge_set_xquad(r, x)) {
         return 0;
@@ -236,9 +219,9 @@ static int secp256k1_ge_set_xo_var(secp256k1_ge *r, const secp256k1_fe *x, int o
         secp256k1_fe_negate(&r->y, &r->y, 1);
     }
     return 1;
-
 }
 
+//
 static void secp256k1_gej_set_ge(secp256k1_gej *r, const secp256k1_ge *a) {
    r->infinity = a->infinity;
    r->x = a->x;
@@ -263,6 +246,7 @@ static void secp256k1_gej_neg(secp256k1_gej *r, const secp256k1_gej *a) {
     secp256k1_fe_negate(&r->y, &r->y, 1);
 }
 
+// ヤコビアン座標 無限遠点かどうか
 static int secp256k1_gej_is_infinity(const secp256k1_gej *a) {
     return a->infinity;
 }
@@ -287,6 +271,7 @@ static int secp256k1_gej_is_valid_var(const secp256k1_gej *a) {
     return secp256k1_fe_equal_var(&y2, &x3);
 }
 
+//
 static int secp256k1_ge_is_valid_var(const secp256k1_ge *a) {
     secp256k1_fe y2, x3, c;
     if (a->infinity) {
@@ -301,6 +286,10 @@ static int secp256k1_ge_is_valid_var(const secp256k1_ge *a) {
     return secp256k1_fe_equal_var(&y2, &x3);
 }
 
+// ヤコビアン座標 2倍算
+// @param r  : gej
+// @param a  : gej
+// @param rzr: fe
 static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, secp256k1_fe *rzr) {
     /* Operations: 3 mul, 4 sqr, 0 normalize, 12 mul_int/add/negate.
      *
@@ -356,11 +345,20 @@ static void secp256k1_gej_double_var(secp256k1_gej *r, const secp256k1_gej *a, s
     secp256k1_fe_add(&r->y, &t2);         /* Y' = 36*X^3*Y^2 - 27*X^6 - 8*Y^4 (4) */
 }
 
+// ヤコビアン座標 aが無限遠点でないことが分かっている場合
+// r  : gej
+// a  : gej
+// rzr: fe
 static SECP256K1_INLINE void secp256k1_gej_double_nonzero(secp256k1_gej *r, const secp256k1_gej *a, secp256k1_fe *rzr) {
     VERIFY_CHECK(!secp256k1_gej_is_infinity(a));
     secp256k1_gej_double_var(r, a, rzr);
 }
 
+// ヤコビアン座標 加法 r = a + b
+// r  : gej
+// a  : gej
+// b  : gej
+// rzr: fe
 static void secp256k1_gej_add_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_gej *b, secp256k1_fe *rzr) {
     /* Operations: 12 mul, 4 sqr, 2 normalize, 12 mul_int/add/negate */
     secp256k1_fe z22, z12, u1, u2, s1, s2, h, i, i2, h2, h3, t;
@@ -414,6 +412,11 @@ static void secp256k1_gej_add_var(secp256k1_gej *r, const secp256k1_gej *a, cons
     secp256k1_fe_add(&r->y, &h3);
 }
 
+// ヤコビアン座標 加法 r = a + b
+// r  : gej
+// a  : gej
+// b  : ge
+// rzr: fe
 static void secp256k1_gej_add_ge_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b, secp256k1_fe *rzr) {
     /* 8 mul, 3 sqr, 4 normalize, 12 mul_int/add/negate */
     secp256k1_fe z12, u1, u2, s1, s2, h, i, i2, h2, h3, t;
@@ -463,6 +466,11 @@ static void secp256k1_gej_add_ge_var(secp256k1_gej *r, const secp256k1_gej *a, c
     secp256k1_fe_add(&r->y, &h3);
 }
 
+//
+// r     : gej
+// a     : gej
+// b     : ge
+// bzinv : fe
 static void secp256k1_gej_add_zinv_var(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b, const secp256k1_fe *bzinv) {
     /* 9 mul, 3 sqr, 4 normalize, 12 mul_int/add/negate */
     secp256k1_fe az, z12, u1, u2, s1, s2, h, i, i2, h2, h3, t;
@@ -519,7 +527,10 @@ static void secp256k1_gej_add_zinv_var(secp256k1_gej *r, const secp256k1_gej *a,
     secp256k1_fe_add(&r->y, &h3);
 }
 
-
+//
+// r : gej
+// a : gej
+// b : ge
 static void secp256k1_gej_add_ge(secp256k1_gej *r, const secp256k1_gej *a, const secp256k1_ge *b) {
     /* Operations: 7 mul, 5 sqr, 4 normalize, 21 mul_int/add/negate/cmov */
     static const secp256k1_fe fe_1 = SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 1);
@@ -642,6 +653,8 @@ static void secp256k1_gej_add_ge(secp256k1_gej *r, const secp256k1_gej *a, const
     r->infinity = infinity;
 }
 
+// r : gej
+// s : fe
 static void secp256k1_gej_rescale(secp256k1_gej *r, const secp256k1_fe *s) {
     /* Operations: 4 mul, 1 sqr */
     secp256k1_fe zz;
@@ -653,6 +666,8 @@ static void secp256k1_gej_rescale(secp256k1_gej *r, const secp256k1_fe *s) {
     secp256k1_fe_mul(&r->z, &r->z, s);                  /* r->z *= s   */
 }
 
+// r : ge_storage
+// a : ge
 static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const secp256k1_ge *a) {
     secp256k1_fe x, y;
     VERIFY_CHECK(!a->infinity);
@@ -664,12 +679,17 @@ static void secp256k1_ge_to_storage(secp256k1_ge_storage *r, const secp256k1_ge 
     secp256k1_fe_to_storage(&r->y, &y);
 }
 
+// r : ge
+// a : ge_storage
 static void secp256k1_ge_from_storage(secp256k1_ge *r, const secp256k1_ge_storage *a) {
     secp256k1_fe_from_storage(&r->x, &a->x);
     secp256k1_fe_from_storage(&r->y, &a->y);
     r->infinity = 0;
 }
 
+// r : ge_storage
+// a : ge_storage
+// flag : int
 static SECP256K1_INLINE void secp256k1_ge_storage_cmov(secp256k1_ge_storage *r, const secp256k1_ge_storage *a, int flag) {
     secp256k1_fe_storage_cmov(&r->x, &a->x, flag);
     secp256k1_fe_storage_cmov(&r->y, &a->y, flag);

@@ -11,6 +11,7 @@
 #include "field.h"
 
 /** A group element of the secp256k1 curve, in affine coordinates. */
+// アフィン座標での点 x, y, infinity
 typedef struct {
     secp256k1_fe x;
     secp256k1_fe y;
@@ -21,6 +22,7 @@ typedef struct {
 #define SECP256K1_GE_CONST_INFINITY {SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), SECP256K1_FE_CONST(0, 0, 0, 0, 0, 0, 0, 0), 1}
 
 /** A group element of the secp256k1 curve, in jacobian coordinates. */
+// ヤコビアン座標での点 x, y, z, infinity
 typedef struct {
     secp256k1_fe x; /* actual X: x/z^2 */
     secp256k1_fe y; /* actual Y: y/z^3 */

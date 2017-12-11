@@ -3,6 +3,9 @@
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
+//
+// 体演算 26bit のlimb 実装
+//
 
 #ifndef SECP256K1_FIELD_REPR_IMPL_H
 #define SECP256K1_FIELD_REPR_IMPL_H
@@ -430,8 +433,8 @@ SECP256K1_INLINE static void secp256k1_fe_negate(secp256k1_fe *r, const secp256k
 }
 
 // r *= a
-// r:fe
-// a:int
+// @param r:fe
+// @param a:int
 SECP256K1_INLINE static void secp256k1_fe_mul_int(secp256k1_fe *r, int a) {
     r->n[0] *= a;
     r->n[1] *= a;
@@ -451,8 +454,8 @@ SECP256K1_INLINE static void secp256k1_fe_mul_int(secp256k1_fe *r, int a) {
 }
 
 // r += a
-// r:fe
-// a:fe
+// @param r:fe
+// @param a:fe
 SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe *r, const secp256k1_fe *a) {
 #ifdef VERIFY
     secp256k1_fe_verify(a);
@@ -474,14 +477,6 @@ SECP256K1_INLINE static void secp256k1_fe_add(secp256k1_fe *r, const secp256k1_f
 #endif
 }
 
-#if defined(USE_EXTERNAL_ASM)
-
-/* External assembler implementation */
-void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SECP256K1_RESTRICT b);
-void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a);
-
-#else
-
 #ifdef VERIFY
 #define VERIFY_BITS(x, n) VERIFY_CHECK(((x) >> (n)) == 0)
 #else
@@ -489,9 +484,9 @@ void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a);
 #endif
 
 // r = a * b
-// r: uint32_t[10]
-// a: uint32_t[10]
-// b: uint32_t[10]
+// @param r: uint32_t[10]
+// @param a: uint32_t[10]
+// @param b: uint32_t[10]
 SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t *a, const uint32_t * SECP256K1_RESTRICT b) {
     uint64_t c, d;
     uint64_t u0, u1, u2, u3, u4, u5, u6, u7, u8;
@@ -822,6 +817,7 @@ SECP256K1_INLINE static void secp256k1_fe_mul_inner(uint32_t *r, const uint32_t 
 }
 
 // r = root a
+// 平方剰余
 // r:uint32_t[10]
 // a:uint32_t[10]
 SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t *a) {
@@ -1097,12 +1093,11 @@ SECP256K1_INLINE static void secp256k1_fe_sqr_inner(uint32_t *r, const uint32_t 
     VERIFY_BITS(r[2], 27);
     /* [r9 r8 r7 r6 r5 r4 r3 r2 r1 r0] = [p18 p17 p16 p15 p14 p13 p12 p11 p10 p9 p8 p7 p6 p5 p4 p3 p2 p1 p0] */
 }
-#endif
 
 // r = a * b
-// r:fe
-// a:fe
-// b:fe
+// @param r:fe
+// @param a:fe
+// @param b:fe
 static void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp256k1_fe * SECP256K1_RESTRICT b) {
 #ifdef VERIFY
     VERIFY_CHECK(a->magnitude <= 8);
@@ -1120,8 +1115,8 @@ static void secp256k1_fe_mul(secp256k1_fe *r, const secp256k1_fe *a, const secp2
 }
 
 // r = square root a
-// r:fe
-// a:fe
+// @param [out] r:fe
+// @param [in]  a:fe
 static void secp256k1_fe_sqr(secp256k1_fe *r, const secp256k1_fe *a) {
 #ifdef VERIFY
     VERIFY_CHECK(a->magnitude <= 8);
@@ -1161,6 +1156,9 @@ static SECP256K1_INLINE void secp256k1_fe_cmov(secp256k1_fe *r, const secp256k1_
 
 // if flag is true, r = a
 // if not, r leave it
+// r : fe_storage
+// a : fe_storage
+// flag : int
 static SECP256K1_INLINE void secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, const secp256k1_fe_storage *a, int flag) {
     uint32_t mask0, mask1;
     mask0 = flag + ~((uint32_t)0);
@@ -1176,8 +1174,8 @@ static SECP256K1_INLINE void secp256k1_fe_storage_cmov(secp256k1_fe_storage *r, 
 }
 
 // r = a
-// r:fe_storage
-// a:fe
+// @param r:fe_storage
+// @param a:fe
 static void secp256k1_fe_to_storage(secp256k1_fe_storage *r, const secp256k1_fe *a) {
 #ifdef VERIFY
     VERIFY_CHECK(a->normalized);
@@ -1193,8 +1191,8 @@ static void secp256k1_fe_to_storage(secp256k1_fe_storage *r, const secp256k1_fe 
 }
 
 // r = a
-// r:fe
-// a:fe_storage
+// @param r:fe
+// @param a:fe_storage
 static SECP256K1_INLINE void secp256k1_fe_from_storage(secp256k1_fe *r, const secp256k1_fe_storage *a) {
     r->n[0] = a->n[0] & 0x3FFFFFFUL;
     r->n[1] = a->n[0] >> 26 | ((a->n[1] << 6) & 0x3FFFFFFUL);

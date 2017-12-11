@@ -9,7 +9,9 @@
 
 #include <stdint.h>
 
+//
 // 体演算 26bit のlimb
+//
 typedef struct {
     /* X = sum(i=0..9, elem[i]*2^26) mod n */
     // 先頭が下位
