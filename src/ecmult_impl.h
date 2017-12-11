@@ -20,13 +20,8 @@
 #define WINDOW_A 5
 /** larger numbers may result in slightly better performance, at the cost of
     exponentially larger precomputed tables. */
-#ifdef USE_ENDOMORPHISM
-/** Two tables for window size 15: 1.375 MiB. */
-#define WINDOW_G 15
-#else
 /** One table for window size 16: 1.375 MiB. */
 #define WINDOW_G 16
-#endif
 #endif
 
 #ifdef USE_ENDOMORPHISM
@@ -282,9 +277,6 @@ static void secp256k1_ecmult_odd_multiples_table_storage_var(const int n, secp25
 
 static void secp256k1_ecmult_context_init(secp256k1_ecmult_context *ctx) {
     ctx->pre_g = NULL;
-#ifdef USE_ENDOMORPHISM
-    ctx->pre_g_128 = NULL;
-#endif
 }
 
 static void secp256k1_ecmult_context_build(secp256k1_ecmult_context *ctx, const secp256k1_callback *cb) {
@@ -328,15 +320,6 @@ static void secp256k1_ecmult_context_clone(secp256k1_ecmult_context *dst,
         dst->pre_g = (secp256k1_ge_storage (*)[])checked_malloc(cb, size);
         memcpy(dst->pre_g, src->pre_g, size);
     }
-#ifdef USE_ENDOMORPHISM
-    if (src->pre_g_128 == NULL) {
-        dst->pre_g_128 = NULL;
-    } else {
-        size_t size = sizeof((*dst->pre_g_128)[0]) * ECMULT_TABLE_SIZE(WINDOW_G);
-        dst->pre_g_128 = (secp256k1_ge_storage (*)[])checked_malloc(cb, size);
-        memcpy(dst->pre_g_128, src->pre_g_128, size);
-    }
-#endif
 }
 
 static int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx) {
@@ -345,9 +328,6 @@ static int secp256k1_ecmult_context_is_built(const secp256k1_ecmult_context *ctx
 
 static void secp256k1_ecmult_context_clear(secp256k1_ecmult_context *ctx) {
     free(ctx->pre_g);
-#ifdef USE_ENDOMORPHISM
-    free(ctx->pre_g_128);
-#endif
     secp256k1_ecmult_context_init(ctx);
 }
 
