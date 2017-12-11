@@ -9,12 +9,14 @@
 
 #include <stdint.h>
 
+// 体演算 26bit のlimb
 typedef struct {
     /* X = sum(i=0..9, elem[i]*2^26) mod n */
+    // 先頭が下位
     uint32_t n[10];
 #ifdef VERIFY
-    int magnitude;
-    int normalized;
+    int magnitude;  //
+    int normalized; // 1:normalized, 0:not
 #endif
 } secp256k1_fe;
 

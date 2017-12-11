@@ -21,20 +21,36 @@
 #error "Please select field implementation"
 #endif
 
+// return mod qで a != b
 SECP256K1_INLINE static int secp256k1_fe_equal(const secp256k1_fe *a, const secp256k1_fe *b) {
     secp256k1_fe na;
+    // 4*q -a
     secp256k1_fe_negate(&na, a, 1);
+    // 4*q -a + b
     secp256k1_fe_add(&na, b);
+    // val mod q が0かどうかを返す
     return secp256k1_fe_normalizes_to_zero(&na);
 }
 
+// return mod qで a != b
 SECP256K1_INLINE static int secp256k1_fe_equal_var(const secp256k1_fe *a, const secp256k1_fe *b) {
     secp256k1_fe na;
+    // 4*q -a 
     secp256k1_fe_negate(&na, a, 1);
+    // val = 4*q-a + b
     secp256k1_fe_add(&na, b);
+    // val mod q が0かどうかを返す
     return secp256k1_fe_normalizes_to_zero_var(&na);
 }
 
+// 平方剰余
+// http://pebble8888.hatenablog.com/entry/2017/07/30/222227
+// q は q mod 4 = 3 を満たすとする.
+// ここで q = 2^256 - 2^32 - 2^9 - 2^8 - 2^7 - 2^6 - 2^4 - 1 である.
+// x^2 = a を満たす x が存在する場合,
+// x = a ^ ((q+1)/4)が解である.
+// (q+1)/4 = 2^252 - 2^30 - 2^7 - 2^6 - 2^5 - 2^4 - 2^2
+//
 static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
     /** Given that p is congruent to 3 mod 4, we can compute the square root of
      *  a mod p as the (p+1)/4'th power of a.
@@ -45,7 +61,11 @@ static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
      *  Also because (p+1)/4 is an even number, the computed square root is
      *  itself always a square (a ** ((p+1)/4) is the square of a ** ((p+1)/8)).
      */
-    secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
+    secp256k1_fe x2;
+    secp256k1_fe x3;
+    secp256k1_fe x6;
+    secp256k1_fe x9;
+    secp256k1_fe x11, x22, x44, x88, x176, x220, x223, t1;
     int j;
 
     /** The binary representation of (p + 1)/4 has 3 blocks of 1s, with lengths in
@@ -114,25 +134,30 @@ static int secp256k1_fe_sqrt(secp256k1_fe *r, const secp256k1_fe *a) {
     secp256k1_fe_mul(&x223, &x223, &x3);
 
     /* The final result is then assembled using a sliding window over the blocks. */
-
+    // x223を23回２乗しt1にセットする
     t1 = x223;
     for (j=0; j<23; j++) {
         secp256k1_fe_sqr(&t1, &t1);
     }
+    // t1にx22を掛ける
     secp256k1_fe_mul(&t1, &t1, &x22);
+    // t1を6回２乗する
     for (j=0; j<6; j++) {
         secp256k1_fe_sqr(&t1, &t1);
     }
+    // t1にx2を掛ける
     secp256k1_fe_mul(&t1, &t1, &x2);
+    // t1を2回２乗し答えとする
     secp256k1_fe_sqr(&t1, &t1);
     secp256k1_fe_sqr(r, &t1);
 
     /* Check that a square root was actually calculated */
-
+    // rを2乗したらaに等しいことを確認する
     secp256k1_fe_sqr(&t1, r);
     return secp256k1_fe_equal(&t1, a);
 }
 
+// a^(-1) = a^(p-2)
 static void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a) {
     secp256k1_fe x2, x3, x6, x9, x11, x22, x44, x88, x176, x220, x223, t1;
     int j;
@@ -223,6 +248,7 @@ static void secp256k1_fe_inv(secp256k1_fe *r, const secp256k1_fe *a) {
     secp256k1_fe_mul(r, a, &t1);
 }
 
+// 1/a
 static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
 #if defined(USE_FIELD_INV_BUILTIN)
     secp256k1_fe_inv(r, a);
@@ -260,6 +286,9 @@ static void secp256k1_fe_inv_var(secp256k1_fe *r, const secp256k1_fe *a) {
 #endif
 }
 
+// a[0], a[1], ..., a[n]に対して、
+// 1/a[0], 1/a[1], ..., 1/a[n] をrに入れる
+// ただし、無駄な計算をしないようにする
 static void secp256k1_fe_inv_all_var(secp256k1_fe *r, const secp256k1_fe *a, size_t len) {
     secp256k1_fe u;
     size_t i;
@@ -287,6 +316,8 @@ static void secp256k1_fe_inv_all_var(secp256k1_fe *r, const secp256k1_fe *a, siz
     r[0] = u;
 }
 
+// 平方剰余
+// x^2 = a mod q を満たす x が存在するかどうか
 static int secp256k1_fe_is_quad_var(const secp256k1_fe *a) {
 #ifndef USE_NUM_NONE
     unsigned char b[32];
