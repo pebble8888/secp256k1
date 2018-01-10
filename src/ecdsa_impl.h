@@ -202,8 +202,17 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
     return 1;
 }
 
-// @brief サイニングのベリファイ
-static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const secp256k1_scalar *sigr, const secp256k1_scalar *sigs, const secp256k1_ge *pubkey, const secp256k1_scalar *message) {
+/* 
+ * @brief サイニングのベリファイ
+ * @retval 1 : valid
+ * @retval 0 : invalid
+ */
+static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx,
+                                      const secp256k1_scalar *sigr,
+                                      const secp256k1_scalar *sigs, 
+                                      const secp256k1_ge *pubkey, 
+                                      const secp256k1_scalar *message)
+{
     unsigned char c[32];
     secp256k1_scalar sn, u1, u2;
     secp256k1_fe xr;
@@ -258,8 +267,27 @@ static int secp256k1_ecdsa_sig_verify(const secp256k1_ecmult_context *ctx, const
     return 0;
 }
 
-// @brief サイニング
-static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, secp256k1_scalar *sigr, secp256k1_scalar *sigs, const secp256k1_scalar *seckey, const secp256k1_scalar *message, const secp256k1_scalar *nonce, int *recid) {
+/*
+ @brief サイニング
+ @param ctx     : gen_context
+ @param sigr    : scalar
+ @param sigs    : scalar
+ @param seckey  : scalar  秘密鍵
+ @param message : scalar  平文
+ @param nonce   : scalar
+ @param recid   : int
+
+ @retval 1: success
+ @retval 0: fail
+ */
+static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx,
+                                    secp256k1_scalar *sigr,
+                                    secp256k1_scalar *sigs,
+                                    const secp256k1_scalar *seckey,
+                                    const secp256k1_scalar *message,
+                                    const secp256k1_scalar *nonce,
+                                    int *recid)
+{
     unsigned char b[32];
     secp256k1_gej rp;
     secp256k1_ge r;
@@ -267,16 +295,23 @@ static int secp256k1_ecdsa_sig_sign(const secp256k1_ecmult_gen_context *ctx, sec
     int overflow = 0;
 
     secp256k1_ecmult_gen(ctx, &rp, nonce);
+    
+    // ヤコビアン座標からアフィン座標へ変換する 
     secp256k1_ge_set_gej(&r, &rp);
+
     secp256k1_fe_normalize(&r.x);
     secp256k1_fe_normalize(&r.y);
+
+    // x座標をBigEndian 32バイトへ変換する
     secp256k1_fe_get_b32(b, &r.x);
+
+    // BigEndian 32バイトからスカラー値に変換する
     secp256k1_scalar_set_b32(sigr, b, &overflow);
     /* These two conditions should be checked before calling */
     VERIFY_CHECK(!secp256k1_scalar_is_zero(sigr));
     VERIFY_CHECK(overflow == 0);
 
-    if (recid) {
+    if (recid != NULL) {
         /* The overflow condition is cryptographically unreachable as hitting it requires finding the discrete log
          * of some P where P.x >= order, and only 1 in about 2^127 points meet this criteria.
          */

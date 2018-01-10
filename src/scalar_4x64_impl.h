@@ -8,6 +8,7 @@
 #define SECP256K1_SCALAR_REPR_IMPL_H
 
 /* Limbs of the secp256k1 order. */
+// ベースポイントの位数
 #define SECP256K1_N_0 ((uint64_t)0xBFD25E8CD0364141ULL)
 #define SECP256K1_N_1 ((uint64_t)0xBAAEDCE6AF48A03BULL)
 #define SECP256K1_N_2 ((uint64_t)0xFFFFFFFFFFFFFFFEULL)
