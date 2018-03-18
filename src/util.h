@@ -15,6 +15,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
+#include "secp256k1.h"
+
 typedef struct {
     void (*fn)(const char *text, void* data);
     const void* data;

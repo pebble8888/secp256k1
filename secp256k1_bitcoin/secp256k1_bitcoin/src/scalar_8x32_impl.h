@@ -426,6 +426,7 @@ static void secp256k1_scalar_reduce_512(secp256k1_scalar *r, const uint32_t *l) 
     VERIFY_CHECK(c0 <= 1);
     m12 = c0;
 
+    // m0の直が違う
     /* Reduce 385 bits into 258. */
     /* p[0..8] = m[0..7] + m[8..12] * SECP256K1_N_C. */
     c0 = m0; c1 = 0; c2 = 0;

@@ -16,6 +16,8 @@
 #endif
 static void secp256k1_ecmult_gen_context_init(secp256k1_ecmult_gen_context *ctx) {
     ctx->prec = NULL;
+    memset(&ctx->blind, 0, sizeof(ctx->blind));
+    memset(&ctx->initial, 0, sizeof(ctx->initial));
 }
 
 static void secp256k1_ecmult_gen_context_build(secp256k1_ecmult_gen_context *ctx, const secp256k1_callback* cb) {
@@ -132,10 +134,14 @@ static void secp256k1_ecmult_gen(const secp256k1_ecmult_gen_context *ctx,
     secp256k1_ge_storage adds;
     secp256k1_scalar gnb;
     int bits;
+    memset(&add, 0, sizeof(add));
+    memset(&gnb, 0, sizeof(gnb));
     memset(&adds, 0, sizeof(adds));
     *r = ctx->initial;
+    
     /* Blind scalar/point multiplication by computing (n-b)G + bG instead of nG. */
     secp256k1_scalar_add(&gnb, gn, &ctx->blind);
+    
     add.infinity = 0;
     for (int j = 0; j < 64; j++) {
         bits = secp256k1_scalar_get_bits(&gnb, j * 4, 4);
@@ -165,6 +171,10 @@ static void secp256k1_ecmult_gen_blind(secp256k1_ecmult_gen_context *ctx, const 
 {
     secp256k1_scalar b;
     secp256k1_gej gb;
+
+    memset(&b, 0, sizeof(b));
+    memset(&gb, 0, sizeof(gb));
+
     secp256k1_fe s;
     unsigned char nonce32[32];
     secp256k1_rfc6979_hmac_sha256 rng;

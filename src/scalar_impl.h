@@ -94,7 +94,6 @@ static void secp256k1_scalar_inverse(secp256k1_scalar *r, const secp256k1_scalar
         secp256k1_scalar_sqr(&x126, &x126);
     }
     secp256k1_scalar_mul(&x126, &x126, &x14);
-
     /* Then accumulate the final result (t starts at x126). */
     t = &x126;
     for (i = 0; i < 3; i++) {

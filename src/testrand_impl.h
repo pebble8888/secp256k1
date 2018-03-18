@@ -16,7 +16,7 @@
 static secp256k1_rfc6979_hmac_sha256 secp256k1_test_rng;
 static uint32_t secp256k1_test_rng_precomputed[8];
 static int secp256k1_test_rng_precomputed_used = 8;
-static uint64_t secp256k1_test_rng_integer;
+static uint64_t secp256k1_test_rng_integer = 0;
 static int secp256k1_test_rng_integer_bits_left = 0;
 
 SECP256K1_INLINE static void secp256k1_rand_seed(const unsigned char *seed16) {

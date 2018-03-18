@@ -1972,7 +1972,7 @@ void test_ge(void) {
 
     /* Compute z inverses. */
     {
-        secp256k1_fe *zs = checked_malloc(&ctx->error_callback, sizeof(secp256k1_fe) * (1 + 4 * runs));
+        secp256k1_fe *zs = (secp256k1_fe *)checked_malloc(&ctx->error_callback, sizeof(secp256k1_fe) * (1 + 4 * runs));
         for (i = 0; i < 4 * runs + 1; i++) {
             if (i == 0) {
                 /* The point at infinity does not have a meaningful z inverse. Any should do. */
@@ -4020,6 +4020,9 @@ void test_ecdsa_end_to_end(void) {
 
     /* Construct and verify corresponding public key. */
     CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
+    for (int i = 0; i < 32; ++i){
+        printf("%d \n", privkey[i]);
+    }
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
     /* Verify exporting and importing public key. */
@@ -4028,6 +4031,9 @@ void test_ecdsa_end_to_end(void) {
     CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
 
     /* Verify negation changes the key and changes it back */
+    for (int i = 0; i < 64; ++i){
+        printf("%d \n", pubkey.data[i]);
+    }
     memcpy(&pubkey_tmp, &pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_negate(ctx, &pubkey_tmp) == 1);
     CHECK(memcmp(&pubkey_tmp, &pubkey, sizeof(pubkey)) != 0);
@@ -4498,34 +4504,29 @@ static void random_ber_signature(unsigned char *sig, size_t *len, int* certainly
 }
 
 void run_ecdsa_der_parse(void) {
-    int i,j;
-    for (i = 0; i < 200 * count; i++) {
-        unsigned char buffer[2048];
-        size_t buflen = 0;
-        int certainly_der = 0;
-        int certainly_not_der = 0;
-        random_ber_signature(buffer, &buflen, &certainly_der, &certainly_not_der);
-        CHECK(buflen <= 2048);
-        for (j = 0; j < 16; j++) {
-            int ret = 0;
-            if (j > 0) {
-                damage_array(buffer, &buflen);
-                /* We don't know anything anymore about the DERness of the result */
-                certainly_der = 0;
-                certainly_not_der = 0;
-            }
-            ret = test_ecdsa_der_parse(buffer, buflen, certainly_der, certainly_not_der);
-            if (ret != 0) {
-                size_t k;
-                fprintf(stderr, "Failure %x on ", ret);
-                for (k = 0; k < buflen; k++) {
-                    fprintf(stderr, "%02x ", buffer[k]);
-                }
-                fprintf(stderr, "\n");
-            }
-            CHECK(ret == 0);
+    size_t buflen = 0;
+    int certainly_der = 1;
+    int certainly_not_der = 0;
+    CHECK(buflen <= 2048);
+    int ret = 0;
+    unsigned char buffer[] = {
+        0x30, 0x25, 0x02, 0x1e, 0x6a, 0x00, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0x3f, 0xfc, 0xff, 0xff, 0xff,
+        0xff, 0xff, 0xff, 0x3f, 0xe0, 0xff, 0xff, 0xff,
+        0xff, 0x1f, 0x02, 0x03, 0x78, 0x03, 0x00 };
+    buflen = 39;
+    printf("certainly_der %d certainly_not_der %d\n", certainly_der, certainly_not_der);
+    ret = test_ecdsa_der_parse(buffer, buflen, certainly_der, certainly_not_der);
+    if (ret != 0) {
+        size_t k;
+        fprintf(stderr, "Failure %x on ", ret);
+        for (k = 0; k < buflen; k++) {
+            fprintf(stderr, "%02x ", buffer[k]);
         }
+        fprintf(stderr, "\n");
     }
+    CHECK(ret == 0);
 }
 
 /* Tests several edge cases. */
@@ -5008,7 +5009,7 @@ int main(int argc, char **argv) {
     secp256k1_rand_seed(seed16);
 
     printf("test count = %i\n", count);
-    printf("random seed = %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", seed16[0], seed16[1], seed16[2], seed16[3], seed16[4], seed16[5], seed16[6], seed16[7], seed16[8], seed16[9], seed16[10], seed16[11], seed16[12], seed16[13], seed16[14], seed16[15]);
+    printf("random seed = %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x\n", seed16[0], seed16[1], seed16[2], seed16[3], seed16[4], seed16[5], seed16[6], seed16[7], seed16[8], seed16[9], seed16[10], seed16[11], seed16[12], seed16[13], seed16[14], seed16[15]);
 
     /* initialize */
     run_context_tests();
@@ -5018,6 +5019,7 @@ int main(int argc, char **argv) {
         secp256k1_rand256(run32);
         CHECK(secp256k1_context_randomize(ctx, secp256k1_rand_bits(1) ? run32 : NULL));
     }
+#if 0
 
     run_rand_bits();
     run_rand_int();
@@ -5077,6 +5079,7 @@ int main(int argc, char **argv) {
     run_random_pubkeys();
     run_ecdsa_der_parse();
     run_ecdsa_sign_verify();
+#endif
     run_ecdsa_end_to_end();
     run_ecdsa_edge_cases();
 #ifdef ENABLE_OPENSSL_TESTS

@@ -44,6 +44,7 @@ static void bench_sign_run(void* arg) {
     }
 }
 
+/*
 int main(void) {
     bench_sign data;
 
@@ -54,3 +55,4 @@ int main(void) {
     secp256k1_context_destroy(data.ctx);
     return 0;
 }
+ */

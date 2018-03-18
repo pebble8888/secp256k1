@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <assert.h>
 
 #define Ch(x,y,z) ((z) ^ ((x) & ((y) ^ (z))))
 #define Maj(x,y,z) (((x) & (y)) | ((z) & ((x) | (y))))
@@ -44,6 +45,26 @@ static void secp256k1_sha256_initialize(secp256k1_sha256 *hash) {
     hash->s[7] = 0x5be0cd19ul;
     hash->bytes = 0;
 }
+
+/*
+static void debugPrintSHA256(secp256k1_sha256_t *sha256) {
+    for (int i = 0; i < 16; ++i){
+        printf("%08x ", sha256->buf[i]);
+    }
+    printf("\n");
+    for (int i = 0; i < 8; ++i){
+        printf("%08x ", sha256->s[i]);
+    }
+    printf("\n");
+}
+
+static void debugPrintHMAC(secp256k1_hmac_sha256_t *hmac) {
+    printf("inner\n");
+    debugPrintSHA256(&hmac->inner);
+    printf("outer\n");
+    debugPrintSHA256(&hmac->outer);
+}
+ */
 
 /** Perform one SHA-256 transformation, processing 16 big endian 32-bit words. */
 static void secp256k1_sha256_transform(uint32_t* s, const uint32_t* chunk) {
@@ -202,6 +223,20 @@ static void secp256k1_hmac_sha256_finalize(secp256k1_hmac_sha256 *hash, unsigned
     secp256k1_sha256_finalize(&hash->outer, out32);
 }
 
+/*
+static void debugPrintRFC6979(secp256k1_rfc6979_hmac_sha256_t *rng) {
+    printf("k:\n");
+    for (int i = 0; i < 32; ++i){
+        printf("%02x ", rng->k[i]);
+    }
+    printf("\n");
+    printf("v:\n");
+    for (int i = 0; i < 32; ++i){
+        printf("%02x ", rng->v[i]);
+    }
+    printf("\n");
+}
+ */
 
 static void secp256k1_rfc6979_hmac_sha256_initialize(secp256k1_rfc6979_hmac_sha256 *rng, const unsigned char *key, size_t keylen) {
     secp256k1_hmac_sha256 hmac;
