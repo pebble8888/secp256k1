@@ -7,6 +7,11 @@ extern "C" {
 
 #include <stddef.h>
 
+/**
+ * 秘密鍵はスカラー値
+ * 公開鍵は楕円曲線上の点
+ */
+
 /* These rules specify the order of arguments in API calls:
  *
  * 1. Context pointers go first, followed by output arguments, combined
@@ -420,6 +425,8 @@ SECP256K1_API int secp256k1_ecdsa_signature_serialize_compact(
  * validation, but be aware that doing so results in malleable signatures.
  *
  * For details, see the comments for that function.
+ *
+ * @note    P とデータを使い署名が正しいか検証する 
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdsa_verify(
     const secp256k1_context* ctx,
@@ -498,6 +505,8 @@ SECP256K1_API extern const secp256k1_nonce_function secp256k1_nonce_function_def
  *
  * The created signature is always in lower-S form. See
  * secp256k1_ecdsa_signature_normalize for more details.
+ *
+ * @note s と nonce を使って データに対する署名を作成する 
  */
 SECP256K1_API int secp256k1_ecdsa_sign(
     const secp256k1_context* ctx,
@@ -514,6 +523,8 @@ SECP256K1_API int secp256k1_ecdsa_sign(
  *           0: secret key is invalid
  *  Args:    ctx: pointer to a context object (cannot be NULL)
  *  In:      seckey: pointer to a 32-byte secret key (cannot be NULL)
+ *
+ *  @note  s が1以上,secp256k1のオーダー未満かどうか 
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
     const secp256k1_context* ctx,
@@ -527,6 +538,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_seckey_verify(
  *  Args:   ctx:        pointer to a context object, initialized for signing (cannot be NULL)
  *  Out:    pubkey:     pointer to the created public key (cannot be NULL)
  *  In:     seckey:     pointer to a 32-byte private key (cannot be NULL)
+ *
+ *  @note   s * G 
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
     const secp256k1_context* ctx,
@@ -539,6 +552,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_create(
  *  Returns: 1 always
  *  Args:   ctx:        pointer to a context object
  *  In/Out: seckey:     pointer to the 32-byte private key to be negated (cannot be NULL)
+ *
+ *  @note   - s
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_negate(
     const secp256k1_context* ctx,
@@ -550,6 +565,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_negate(
  *  Returns: 1 always
  *  Args:   ctx:        pointer to a context object
  *  In/Out: pubkey:     pointer to the public key to be negated (cannot be NULL)
+ *
+ *  @note  - P
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_negate(
     const secp256k1_context* ctx,
@@ -564,6 +581,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_negate(
  * Args:    ctx:    pointer to a context object (cannot be NULL).
  * In/Out:  seckey: pointer to a 32-byte private key.
  * In:      tweak:  pointer to a 32-byte tweak.
+ *
+ * @note    s + tweak
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
     const secp256k1_context* ctx,
@@ -580,6 +599,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_add(
  *                  (cannot be NULL).
  * In/Out:  pubkey: pointer to a public key object.
  * In:      tweak:  pointer to a 32-byte tweak.
+ *
+ * @note    P + tweak * G
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_add(
     const secp256k1_context* ctx,
@@ -593,6 +614,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_add(
  * Args:   ctx:    pointer to a context object (cannot be NULL).
  * In/Out: seckey: pointer to a 32-byte private key.
  * In:     tweak:  pointer to a 32-byte tweak.
+ *
+ * @note   s * tweak
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
     const secp256k1_context* ctx,
@@ -607,6 +630,8 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_privkey_tweak_mul(
  *                 (cannot be NULL).
  * In/Out:  pubkey: pointer to a public key obkect.
  * In:      tweak:  pointer to a 32-byte tweak.
+ *
+ * @note    P * tweak
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_tweak_mul(
     const secp256k1_context* ctx,
@@ -646,6 +671,12 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_context_randomize(
  *                      (cannot be NULL)
  *  In:     ins:        pointer to array of pointers to public keys (cannot be NULL)
  *          n:          the number of public keys to add together (must be at least 1)
+ *
+ *  @param out 点
+ *  @param ins 点配列の先頭ポインタ
+ *  @param n 点配列の個数
+ *  @note 複数の点を加算した結果を返す
+ *        P[0] + P[1] + ... + P[n]
  */
 SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ec_pubkey_combine(
     const secp256k1_context* ctx,
