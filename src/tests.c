@@ -3669,6 +3669,7 @@ void run_ec_pubkey_parse_test(void) {
 }
 
 void run_eckey_edge_case_test(void) {
+    printf("run_eckey_edge_cas_test\n");
     const unsigned char orderc[32] = {
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
         0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xfe,
@@ -3994,8 +3995,9 @@ int is_empty_signature(const secp256k1_ecdsa_signature *sig) {
 }
 
 void test_ecdsa_end_to_end(void) {
+	printf("test_ecdsa_end_to_end\n");
     unsigned char extra[32] = {0x00};
-    unsigned char privkey[32];
+    //unsigned char privkey[32];
     unsigned char message[32];
     unsigned char privkey2[32];
     secp256k1_ecdsa_signature signature[6];
@@ -4010,30 +4012,32 @@ void test_ecdsa_end_to_end(void) {
     size_t seckeylen = 300;
 
     /* Generate a random key and message. */
-    {
-        secp256k1_scalar msg, key;
-        random_scalar_order_test(&msg);
-        random_scalar_order_test(&key);
-        secp256k1_scalar_get_b32(privkey, &key);
-        secp256k1_scalar_get_b32(message, &msg);
-    }
+    
+    secp256k1_scalar msg, key;
+    random_scalar_order_test(&msg);
+    random_scalar_order_test(&key);
+    //secp256k1_scalar_get_b32(privkey, &key);
+	unsigned char privkey[32] = {
+		0x18, 0xE1, 0x4A, 0x7B, 0x6A, 0x30, 0x7F, 0x42,
+		0x6A, 0x94, 0xF8, 0x11, 0x47, 0x01, 0xE7, 0xC8,
+		0xE7, 0x74, 0xE7, 0xF9, 0xA4, 0x7E, 0x2C, 0x20,
+		0x35, 0xDB, 0x29, 0xA2, 0x06, 0x32, 0x17, 0x25 };
+    secp256k1_scalar_get_b32(message, &msg);
 
     /* Construct and verify corresponding public key. */
     CHECK(secp256k1_ec_seckey_verify(ctx, privkey) == 1);
-    for (int i = 0; i < 32; ++i){
-        printf("%d \n", privkey[i]);
-    }
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, privkey) == 1);
 
     /* Verify exporting and importing public key. */
     CHECK(secp256k1_ec_pubkey_serialize(ctx, pubkeyc, &pubkeyclen, &pubkey, secp256k1_rand_bits(1) == 1 ? SECP256K1_EC_COMPRESSED : SECP256K1_EC_UNCOMPRESSED));
+	for (int i = 0; i < 65; ++i){
+		printf("%02x", pubkeyc[i]);
+	}
+	
     memset(&pubkey, 0, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_parse(ctx, &pubkey, pubkeyc, pubkeyclen) == 1);
 
     /* Verify negation changes the key and changes it back */
-    for (int i = 0; i < 64; ++i){
-        printf("%d \n", pubkey.data[i]);
-    }
     memcpy(&pubkey_tmp, &pubkey, sizeof(pubkey));
     CHECK(secp256k1_ec_pubkey_negate(ctx, &pubkey_tmp) == 1);
     CHECK(memcmp(&pubkey_tmp, &pubkey, sizeof(pubkey)) != 0);
@@ -4521,9 +4525,11 @@ void run_ecdsa_der_parse(void) {
     if (ret != 0) {
         size_t k;
         fprintf(stderr, "Failure %x on ", ret);
+		/*
         for (k = 0; k < buflen; k++) {
             fprintf(stderr, "%02x ", buffer[k]);
         }
+		 */		 
         fprintf(stderr, "\n");
     }
     CHECK(ret == 0);
@@ -5066,10 +5072,11 @@ int main(int argc, char **argv) {
 
     /* EC point parser test */
     run_ec_pubkey_parse_test();
+#endif
 
     /* EC key edge cases */
-    run_eckey_edge_case_test();
-
+    //run_eckey_edge_case_test();
+#if 0
 #ifdef ENABLE_MODULE_ECDH
     /* ecdh tests */
     run_ecdh_tests();

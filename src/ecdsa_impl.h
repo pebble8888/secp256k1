@@ -146,13 +146,8 @@ static int secp256k1_der_parse_integer(secp256k1_scalar *r, const unsigned char 
 
 // der パース
 static int secp256k1_ecdsa_sig_parse(secp256k1_scalar *rr, secp256k1_scalar *rs, const unsigned char *sig, size_t size) {
-    for (int i = 0; i < size; ++i){
-        printf("%d\n", sig[i]);
-    }
-    
-    
     const unsigned char *sigend = sig + size;
-    printf("sig %p signed %p size %d\n", sig, sigend, size);
+    // printf("sig %p signed %p size %d\n", sig, sigend, size);
     int rlen;
     if (sig == sigend || *(sig++) != 0x30) {
         /* The encoding doesn't start with a constructed sequence (X.690-0207 8.9.1). */
@@ -205,9 +200,6 @@ static int secp256k1_ecdsa_sig_serialize(unsigned char *sig, size_t *size, const
     sig[4+lenR] = 0x02;
     sig[5+lenR] = lenS;
     memcpy(sig+lenR+6, sp, lenS);
-    for (int i = 0; i < *size; ++i){
-        printf("%d\n", sig[i]);
-    }
     return 1;
 }
 

@@ -183,7 +183,11 @@ int secp256k1_ec_pubkey_parse(const secp256k1_context* ctx, secp256k1_pubkey* pu
     return 1;
 }
 
-int secp256k1_ec_pubkey_serialize(const secp256k1_context* ctx, unsigned char *output, size_t *outputlen, const secp256k1_pubkey* pubkey, unsigned int flags) {
+int secp256k1_ec_pubkey_serialize(const secp256k1_context* ctx,
+								  unsigned char *output,
+								  size_t *outputlen, 
+								  const secp256k1_pubkey* pubkey,
+								  unsigned int flags) {
     secp256k1_ge Q;
     size_t len;
     int ret = 0;
